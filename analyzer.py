@@ -1,54 +1,65 @@
-# We need to know what our AST nodes look like, so we import them.
+# We are importing these classes to check against them
 from parser import AssignmentNode, FunctionCallNode
 
 class SecurityAnalyzer:
-    """
-    This is our Visitor/Inspector class.
-    It walks the AST to find security issues.
-    """
     def __init__(self):
-        # The list where we'll store our findings.
         self.warnings = []
+        self.DANGEROUS_FUNCTIONS = {'gets', 'strcpy', 'strcat', 'sprintf'}
+        print("[DEBUG] Analyzer initialized.") # <-- DEBUG PRINT
 
     def analyze(self, ast):
-        """The main method to start the inspection tour."""
-        for statement in ast:
-            # Check the type of room (node) we are in.
-            if isinstance(statement, AssignmentNode):
-                # If it's an assignment, use the assignment checklist.
-                self.visit_AssignmentNode(statement)
+        if not ast:
+            return []
+        
+        print("[DEBUG] Starting analysis...") # <-- DEBUG PRINT
+        
+        # Helper to flatten lists of nodes
+        def flatten(nodes):
+            flat_list = []
+            for item in nodes:
+                if isinstance(item, list):
+                    flat_list.extend(flatten(item))
+                elif item:
+                    flat_list.append(item)
+            return flat_list
 
+        flat_ast = flatten(ast)
+            
+        for statement in flat_ast:
+            # VVV LET'S SEE WHAT THE ANALYZER IS LOOKING AT VVV
+            print(f"[DEBUG] Analyzing node: {statement} of type {type(statement)}")
+            
+            if isinstance(statement, AssignmentNode):
+                print("[DEBUG] Node is an AssignmentNode. Visiting...") # <-- DEBUG PRINT
+                self.visit_AssignmentNode(statement)
             elif isinstance(statement, FunctionCallNode):
+                print("[DEBUG] Node is a FunctionCallNode. Visiting...") # <-- DEBUG PRINT
                 self.visit_FunctionCallNode(statement)
+        
+        print(f"[DEBUG] Analysis complete. Found {len(self.warnings)} warnings.") # <-- DEBUG PRINT
         return self.warnings
 
     def visit_AssignmentNode(self, node):
-        """
-        This is our 'kitchen checklist' for inspecting AssignmentNodes.
-        """
-        # --- SECURITY CHECK #1: Hardcoded Password ---
-        variable_name = node.name.name.lower() # Check name in lowercase
-
-        # The actual security rule:
+        variable_name = node.name.name.lower()
+        print(f"[DEBUG] Visiting AssignmentNode. Checking variable: '{variable_name}'") # <-- DEBUG PRINT
+        
         if 'password' in variable_name or 'secret' in variable_name or 'key' in variable_name:
             warning_message = (
                 f"Line {node.line}: [SECURITY WARNING] "
                 f"Hardcoded secret detected in variable '{node.name.name}'."
             )
             self.warnings.append(warning_message)
+            print("[DEBUG] ---> Found a hardcoded secret!") # <-- DEBUG PRINT
 
     def visit_FunctionCallNode(self, node):
-        """This is our checklist for inspecting FunctionCallNodes."""
-        print(f"DEBUG: Analyzing function call '{node.name.name}' on line {node.line}")
-        
-        # --- SECURITY CHECK #2: Dangerous Functions ---
-        DANGEROUS_FUNCTIONS = {'gets'} # A set of known dangerous functions
-
         function_name = node.name.name
-        if function_name in DANGEROUS_FUNCTIONS:
+        print(f"[DEBUG] Visiting FunctionCallNode. Checking function: '{function_name}'") # <-- DEBUG PRINT
+        
+        if function_name in self.DANGEROUS_FUNCTIONS:
             warning_message = (
                 f"Line {node.line}: [CRITICAL WARNING] "
                 f"Use of dangerous function '{function_name}' detected. "
                 "This can lead to Buffer Overflows."
             )
             self.warnings.append(warning_message)
+            print("[DEBUG] ---> Found a dangerous function!") # <-- DEBUG PRINT
