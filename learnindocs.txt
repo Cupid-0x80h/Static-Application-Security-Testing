@@ -1,0 +1,289 @@
+Project Name : Static Application Security Testing (SAST) Tool for a Simple Language
+
+Project Idea : 
+Build a tool that statically analyzes source code for common security vulnerabilities. You can design a simple C-like language (or even a subset of C) and write a parser for it. Your compiler's front-end can then traverse the Abstract Syntax Tree (AST) to detect patterns of insecure code.
+
+Key Concept :
+Compiler Frontend: Lexical analysis, parsing (building an AST).
+Cybersecurity: Identifying vulnerabilities like buffer overflows (e.g., detecting the use of gets()), hardcoded secrets, or SQL injection patterns. 
+
+Why it's a good project: This project directly applies concepts from the initial phases of a compiler and provides a practical introduction to automated vulnerability detection.
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+This Project will be done in 4 Phases :
+Phase 1: The Lexer (Lexical Analysis)
+
+    Goal: To break the raw source code into a stream of basic units called "tokens" (like keywords, identifiers, and operators). This is the step we have just started.
+
+Phase 2: The Parser & AST (Syntax Analysis)
+
+    Goal: To take the stream of tokens and build a tree-like structure called an Abstract Syntax Tree (AST). This tree represents the grammatical structure of the code, making it much easier to analyze.
+
+Phase 3: The Security Analyzer (Semantic Analysis)
+
+    Goal: To traverse the AST and look for specific patterns that indicate security vulnerabilities (e.g., calls to dangerous functions, hardcoded passwords). This is the core "security" part of our tool.
+
+Phase 4: The Reporter
+
+    Goal: To present the vulnerabilities found in a clean, human-readable report that specifies what the issue is and where it is located in the code (line number).
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+Learning Apporoach = Project Based Learning 
+
+Phase 1: The Lexer (Lexical Analysis)
+        Imagine you are a human translator. Your Job is to translate a book from English to Nepali. 
+
+        What is the first thing you do when you look at a English sentences ? 
+
+        For Example = Rohan play football.
+        We dont see it as long string of different character like R-o-h-a-n -p-l-a-y- ..... 
+        Our brain automatically breake the sentences into basic words and puncations like 
+
+        A word = Rohan
+        A word = play
+        A word = football
+        A puncations = .
+
+        Space between them is also Important but you/we dont take it as a word itself.
+
+        this is what phase 1 is for.
+        the computer see code as just a long string of text. lets move by example okay
+
+        int score = 100;
+        to the computer it is just i-n-t- -s-c-o-r-e- -=- ...
+
+        so, the fisrt job of the compiler in phase 1 is to scan the line of code and breaks it into the basic words and puncations. This process is called Lexical Analysis. 
+
+        The compiler would look at [int score = 100;] and create a simple organized list like 
+
+        The word = int
+        the word = score
+        the symbol = =
+        the number = 100 
+        the symbol = ;
+
+        In compiler design these words and symbols have a special name called Tokens. 
+
+        So basically the Phase One's Goal is to read long string of code and divide them into an ordered list of tokens 
+
+        AND The program that performs this job is called a Lexer or Tokenzer. 
+
+        At the end : Phase 1 is all about taking a long string of code as input and dividing them into single words or symbols or numbers in odered list. Now as we know our brain automatically know which are word and which are symbols or numbers but computer doesnt so now we have to teach computer on how to do it.
+----------------------------------------------------------------------------------------------------------------------------------------------
+        This Bring us to another question How do we teach the computer to do this??
+        To make computer distinguist between whats a words is and symbols or no, we have to give it a very precise set of rules. 
+
+        here, to define those rules we take out the big guns named as Regular Expression or also known as RegEx. 
+
+        
+        The Rulebook : Regular Expression 
+        RegEx is a way of describing a patterns of text. It will create a rulebook that then used to find the diffenrent types of words.
+
+        example building rule for int score = 100;
+            Rule one : How to Find a number ?
+            We can't simply define each and every no as there are infinite possible number. Insted we give it a certain patterns
+                Rule in english : number is one or more digit grouped together. (0 to 9)
+                Rule in RegEx: \d+
+                    \d = any digit from 0-9
+                    + = one or more of the preceding things 
+                    so \d+ matches 5,67,1234 but not hello.
+
+            Rule two : How to find the specific word int? basically keywords
+            this is easier then we think as we only need to find the exact word.
+                Rule in English : Find the letter i-n-t in the exact order and as whole word not as combined word like sprint it has int but not the int we need 
+                Rule in RegEx: \bint\b
+                    int : matches the literal character 
+                    \b : its is a word boundary. It means there's a space, a punctuation mark, or the start/end of a line on either side. This ensures we match int and not sprint.
+            
+            Rule Three: How to find a variable name like score ?
+            This is a bit more complex as variable name which we call identifiers have rules, they can contains letter and number but can't start with numbers 
+                Rule in english : An identifiers must be start with a letter or an underscore. After that it can be followed by any letter number or underscore.
+                Rule in Regex: [A-Za-z_][A-Za-z0-9_]*
+                    [A-Za-z_] : "match any single character that is an uppercase letter, a lowercase letter, or an underscore." (This covers the first letter).
+                    [A-Za-z0-9_]* : "match any character that is a letter, a number, or an underscore."
+                    The * at the end : "zero or more of the preceding thing".
+
+        Putting all these together:
+        The theory is 
+            1. We write down a list of RegEx rules one for each type of token we want to find (a rule for a numbers keywords identifiers and for = symbols etc)
+            2. We tell our lexer program to scan the code from left to right 
+            3. At every position, it tries to match the text against the list of our rules
+            4. when it find a match  (e.g., it sees 100 and it matches the \d+ rule), it says "Aha! I found a NUMBER token," records it, and then continues scanning from the end of 100.
+
+            This is how we translate the simple idea of "breaking a sentence into words" into concrete instructions a computer can follow.
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+Phase 2 : The Parser and the Abstract Syntax tree (AST)
+        So far we have build a lexer and it has taken our code string and choped it into neat order list of tokens. 
+        int score = 100;  --> [INT, IDENTIFIER('score'), ASSIGN, NUMBER('100'), SEMICOLON]
+
+        But the list on its own doesn't tell us if the code is actually correct or not. Example the lexer would also happily tokenize this wrong code 
+        = ; score 100 int --> [ASSIGN, SEMICOLON, IDENTIFIER('score'), NUMBER('100'), INT]
+
+        The list of tokens is valid but the sentence is grammatically wrong 
+
+        The main Job of phase 2 is to check for the grammar.
+        The component that check the grammar is called a Parser.
+
+        The Parser's Job and The Grammer rulebook   
+            The parser takes the list of tokens from the lexer and check if they follow the language rules or not. We need to define a Grammar a set of rules for what determine the valid "sentence" in our code 
+
+            example, one simple rule can be 
+                A var decalered must be in a order: a type token, followed by an Identifier token, followd by and assign token, followed by a number token, followed by a SEMICOLON token.
+
+            The Parser walk through the token list and check if the code matches the ruls like this or not. If it sees [INT,IDENTIFIER, ASSIGN, NUMBER,SEMICOLON], it says Yes this is a valid variable decaleration.
+
+            if it sees [INT, ASSIGN, IDENTIFIER, ...] it says Errors! was expected an IDENTIFIER here, but got assign token. This is an syntax error.
+
+        The Output :An Abstract Syntax Tree(AST)
+        Beside checking and saying yes or no the parser also does something more powerful as it sucessfully check the grammar, it build a new structure that represent the code's meaning. This Structure is called an Abstract Syntax Tree(AST).
+
+        An AST is the code's family tree 
+        It is a tree that shows the logical relationship between tokens. IT is a much smarter way to represent the program then the flat list 
+
+        Let's look at our line of code: int score = 100;
+
+        The Token List (from Phase 1): A flat list of ingredients.
+        [INT, IDENTIFIER('score'), ASSIGN, NUMBER('100'), SEMICOLON]
+
+        The AST (the output of Phase 2): A structured recipe showing how the ingredients combine.
+                            (Root)
+                               |
+                        AssignStatement 
+                              / \
+                            /     \
+                VariableDeclare   Constant
+                 (type INT)         (value: 100)
+                 |
+                 |
+                 Identifier
+                 (name : score)
+        
+        Why is the AST so much better?
+        Look at the tree. You can now ask questions about the code's meaning.
+
+            "What kind of statement is this?" -> "It's an AssignStatement."
+            "What is the name of the variable being assigned?" -> "score"
+            "What value is being assigned to it?" -> "100"
+
+        This is impossible to do with a simple list of tokens. The AST gives us the structure we need to perform our security analysis in Phase 3. We can write code to find all the AssignStatement nodes in the tree and check what values are being assigned, which is perfect for finding hardcoded passwords!
+
+        Summary of Phase 2
+        Input: The list of tokens from the Lexer.
+        Process: Check the token order against a set of grammar rules. This is done by a Parser.
+        Output: If the grammar is correct, produce an Abstract Syntax Tree (AST). If not, produce a Syntax Error.
+
+        Parser = check the grammer 
+        AST = actual output that the parser builds if the grammer is correct
+
+        Parser read the token list, check the grammer rule and as result is sucess it produce the AST
+
+        How to buld the Parser and AST 
+            writing parser code from scratch can be more complex then writing lexer so for this we will use the python library PLY(python lex-yacc). It help us to build parser by letting us write down our own grammer rule in simple way.
+
+        it has 2 setps 
+            step 1 = Define the AST "Bricks"
+            setp 2 = Write the parser grammer
+----------------------------------------------------------------------------------------------------------------------------------------------
+Phase 3: Semantic Analysis
+        This is the phase sound similar to phase 2 but is not 
+        Syntax (Phase 2) is about correct grammar.
+        Semantics (Phase 3) is about correct meaning.
+
+        A program can be grammatically perfect but still can be meaningless. The job of the semantic analyzer is to figure that thing out.
+
+        The English Sentence Analogy 
+            "The apple eats Rohan"
+            Phase 1 (Lexer): Would correctly tokenize this into words: [The, apple, eats, Rohan, .]
+            Phase 2 (Parser): Would look at the grammar [Article, Noun, Verb, Noun, Punctuation] and say, "Yes, this is a grammatically valid sentence." The syntax is correct.
+            Phase 3 (Semantic Analyzer) : This is where a human or computer say Hold on While the grammer is good the meaning is nonsense. Apple are the things that get eaten not the people by apple, they don't have ability to do it.
+
+            Semantic analysis is the process of checking there kind of logical rules that goes beyound pure grammer.
+
+        Same Idea but in code 
+            int name = "hello";
+
+            Lexer: Would tokenize it perfectly.
+            Parser: If we wrote a grammar rule for it, the parser would build an AST and say the syntax is correct.
+            Semantic Analyzer: This phase would look at the AssignmentNode in the AST. It would see that the variable name was defined with a type of int, but the value being assigned to it is a string. It would then report a Type Mismatch Error. This is a semantic error, an error in meaning.
+        
+        How we can use this for security?
+            Our SAST tool does the same thing, but insted of checking for languare related meaning it checks for security related meaning
+
+            A normal compiler asks: "Does this code make sense according to the language rules?"
+            Our security analyzer asks: "Does this code make sense according to security best practices?"
+
+            The underlying process is identical: traverse the AST and check rules.
+
+        The "How": The Visitor patterns
+            So,how do we "walk through" the AST and check every node? We use very common and powerful technique for this and it is called Visitor Patterns.
+
+            let us thing AST as a building and our SecurityAnalyser is a building Inspector 
+                The Building(AST) has     different kinds of rooms (different node types like AssignmentNode, ConstantNode, etc.).
+                The inspector (our SecurityAnalyzer) has a clipboard with a checklist.
+                The inspector starts at the front door (the root of the AST) and begins a tour.
+                When the inspector enters a "kitchen" (an AssignmentNode), they pull out the specific "kitchen checklist" and start checking for things like fire hazards. This specific checklist is our visit_AssignmentNode() method.
+                When they enter a "bedroom" (maybe a FunctionCallNode in the future), they pull out a different "bedroom checklist".
+
+            The Visitor Pattern is just this simple idea: it's an organized way to "visit" each node in the tree and perform a specific action based on that node's type. 
+        
+        Here, I was stumble on a problem which was classical python problem and which occured due to circular import 
+
+            The Theory: What is a Circular Import?
+
+                Let's use an analogy. Imagine two people on the phone, Parser and Analyzer.
+
+                    Parser calls Analyzer and asks, "Hey Analyzer, tell me about your SecurityAnalyzer class."
+                    Python puts Parser on hold and goes to the analyzer.py file to get the answer.
+                    Analyzer answers the phone and says, "Okay, but before I can tell you about my class, I first need you to tell me what an AssignmentNode is." So, Analyzer calls Parser back.
+                    Parser is still on hold! It can't answer Analyzer's question because it's still waiting for Analyzer to answer its original question.
+
+                    They are stuck waiting for each other in a circle. This is what's happening with your files.
+
+                    parser.py tries to import SecurityAnalyzer from analyzer.py.
+                    analyzer.py tries to import AssignmentNode from parser.py.
+
+                    They are stuck in a loop, and the SecurityAnalyzer class is never successfully loaded before parser.py needs it, causing the NameError.
+                
+                The Simple and Elegant Fix
+
+                    The fix is to change when parser.py imports the SecurityAnalyzer. Instead of importing it at the top of the file, we will import it only when we are about to use it.
+
+                This breaks the circle.
+
+                    Action: Go to the bottom of your parser.py file. Move the from analyzer import SecurityAnalyzer line so it is the first line inside the if __name__ == '__main__': block.
+----------------------------------------------------------------------------------------------------------------------------------------------
+Phase 4 : Project Extension Phase 
+        Before Coming to phase4 we have completed to build a end to end static application security testing tool that :
+            Lexes raw code into tokens.
+            Parses those tokens into a structured Abstract Syntax Tree (AST), handling custom grammar rules.
+            Analyzes the AST using a Visitor pattern to find a specific security vulnerability (hardcoded secrets).
+            Reports the findings with clear, actionable information, including the line number.
+        We also have debug some programming issues while comming to these phase and some typos too.
+
+        Now What's Next?
+            One of the most critical tasks of a SAST tool is to find the use of old, unsafe functions that can lead to major vulnerabilities like Buffer Overflows.
+
+            A classic example is the C function gets(). It reads input from the user but never checks how much space is available in the buffer it's writing to. An attacker can provide very long input that overwrites other parts of the program's memory, leading to a crash or even arbitrary code execution.
+
+            Our goal is to teach our tool to flag any use of gets().
+
+        Step 1: Teach the Parser to Understand Function Calls
+
+            First, our parser needs to recognize the grammar of a function call, like gets("some_string");.
+
+            Action: We need to add a new FunctionCallNode to our "AST bricks" and a new grammar rule to handle function calls.
+
+            Add a p_statement_function_call rule to parser.py
+
+        Step 2: Teach the Analyzer to Check Function Calls
+
+            Now that the AST can contain FunctionCallNodes, we need to teach our "inspector" to visit them and check their name.
+
+            Action: Add a visit_FunctionCallNode method to your SecurityAnalyzer class in analyzer.py.
+
+        Step 3: Test the New Feature
+
+            Finally, update your sample_code in parser.py to include a call to gets().

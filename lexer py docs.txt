@@ -1,0 +1,5 @@
+How the Theory Connects to the Code
+
+    The "Rulebook": The TOKEN_SPECIFICATION list is our rulebook. Each line is one rule that defines one type of token.
+    The "Worker": The tokenize function is the worker that uses the rulebook. It combines all the rules and then goes through the sample_code piece by piece, matching text to the rules and creating our final token list.
+    Order Matters: Notice that INT_KEYWORD comes before IDENTIFIER. If we put IDENTIFIER first, the word int would be matched by the identifier rule ([A-Za-z_][A-Za-z0-9_]*) and would be incorrectly labeled as an IDENTIFIER token instead of a specific INT_KEYWORD token.
