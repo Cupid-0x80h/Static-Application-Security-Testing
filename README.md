@@ -49,6 +49,7 @@ It demonstrates how compiler design principles (lexical analysis, parsing, AST g
 ├── lexer.py          # Lexical Analyzer
 ├── parser.py         # Syntax Analyzer (Parser) & AST generator
 ├── analyzer.py       # Security Analyzer (Semantic Analyzer)
+├── main.py           # main program
 ├── learnindocs.txt   # Learning Notes & Documentation
 └── README.md         # Project Documentation
 ```
@@ -77,10 +78,10 @@ git clone https://github.com/Cupid-0x80h/Static-Application-Security-Testing.git
 cd Static-Application-Security-Testing
 ```
 
-2. Run the `parser.py` file:
+2. Run the `main.py` file:
 
 ```bash
-python parser.py
+python main.py
 ```
 
 3. The script will:
